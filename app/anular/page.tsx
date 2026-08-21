@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { createClient } from "@/utils/supabase/client"
 import { obtenerFechaChileISO } from "@/utils/chile-time"
 import LogoHeader from "@/components/LogoHeader"
@@ -17,7 +18,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Loader2, Clock, Calendar, CheckCircle2, RotateCcw, AlertCircle, ArrowLeft, Trash2, Coins, X } from "lucide-react"
+import { Loader2, Clock, Calendar, CheckCircle2, RotateCcw, AlertCircle, ArrowLeft, Trash2, Coins, X, Sparkles } from "lucide-react"
+import TourAnulacion from "@/components/anular/TourAnulacion"
 
 interface Estudiante {
   id: string
@@ -41,6 +43,7 @@ interface AlmuerzoItem {
 
 export default function AnulacionPage() {
   const supabase = createClient()
+  const router = useRouter()
 
   // Horario states
   const [cargandoHorario, setCargandoHorario] = useState(true)
@@ -332,6 +335,50 @@ export default function AnulacionPage() {
     }
   }
 
+  // Demo: arma un pedido de ejemplo para el estudiante seleccionado y lo
+  // manda al resumen, para mostrar en vivo cómo se aplica el descuento del
+  // crédito recién ganado.
+  const verDescuentoDemo = () => {
+    if (!estudianteSeleccionado) return
+
+    const hoyChile = obtenerFechaChileISO()
+    const [y, m, d] = hoyChile.split("-").map(Number)
+    const fechaFutura = new Date(y, m - 1, d + 3)
+    const fechaFuturaStr = fechaFutura.toISOString().split("T")[0]
+
+    const carritoAlmuerzos = {
+      destinatarios: [
+        {
+          id: estudianteSeleccionado.id,
+          nombre: estudianteSeleccionado.name,
+          tipo: "estudiante",
+          pedidos: {
+            [fechaFuturaStr]: [
+              {
+                codigo_opcion: "1",
+                descripcion_opcion: "Pollo al horno con puré",
+                categoria: "Almuerzo",
+                fecha: fechaFuturaStr,
+                dia_semana: "",
+                cantidad: 1,
+                precio_unitario: 5500,
+                subtotal: 5500,
+              },
+            ],
+          },
+        },
+      ],
+    }
+
+    localStorage.setItem("carritoAlmuerzos", JSON.stringify(carritoAlmuerzos))
+    localStorage.removeItem("carritoColaciones")
+    localStorage.removeItem("funcionarioSeleccionado")
+    localStorage.removeItem("funcionarioConHijosSeleccionado")
+    localStorage.removeItem("destinatariosSeleccionados")
+
+    router.push("/resumen")
+  }
+
   // Render: Loading general (verificando horario)
   if (cargandoHorario) {
     return (
@@ -457,7 +504,7 @@ export default function AnulacionPage() {
             <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
               
               {/* Nivel */}
-              <div className="space-y-1.5">
+              <div id="tour-nivel" className="space-y-1.5">
                 <label className="text-sm font-medium text-gray-700">Nivel</label>
                 <Select
                   value={nivelSeleccionado}
@@ -478,7 +525,7 @@ export default function AnulacionPage() {
               </div>
 
               {/* Curso */}
-              <div className="space-y-1.5">
+              <div id="tour-curso" className="space-y-1.5">
                 <label className="text-sm font-medium text-gray-700">Curso</label>
                 <Select
                   value={cursoSeleccionado}
@@ -507,7 +554,7 @@ export default function AnulacionPage() {
               </div>
 
               {/* Estudiante */}
-              <div className="space-y-1.5">
+              <div id="tour-estudiante" className="space-y-1.5">
                 <label className="text-sm font-medium text-gray-700">Estudiante</label>
                 <Select
                   value={estudianteSeleccionado?.id || ""}
@@ -550,7 +597,7 @@ export default function AnulacionPage() {
                     {estudianteSeleccionado.level} — {estudianteSeleccionado.curso}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-blue-200 shadow-sm">
+                <div id="tour-creditos" className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-full border border-blue-200 shadow-sm">
                   <Coins className="h-5 w-5 text-amber-500" />
                   <span className="text-sm text-gray-700">
                     Créditos disponibles:{" "}
@@ -561,8 +608,19 @@ export default function AnulacionPage() {
                 </div>
               </div>
 
+              {mensajeExito && (
+                <Button
+                  id="tour-ver-descuento"
+                  onClick={verDescuentoDemo}
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Ver cómo se descuenta el crédito en un pedido nuevo
+                </Button>
+              )}
+
               {/* Listado de Almuerzos */}
-              <Card className="shadow-sm border-gray-100 bg-white">
+              <Card id="tour-lista-almuerzos" className="shadow-sm border-gray-100 bg-white">
                 <CardHeader className="pb-3 border-b border-gray-50">
                   <CardTitle className="text-md font-semibold text-gray-800 flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-gray-500" />
@@ -587,7 +645,7 @@ export default function AnulacionPage() {
                     </div>
                   ) : (
                     <div className="divide-y divide-gray-100">
-                      {almuerzos.map((item) => (
+                      {almuerzos.map((item, index) => (
                         <div
                           key={item.id}
                           className="flex justify-between items-center p-4 hover:bg-gray-50 transition-colors"
@@ -610,6 +668,7 @@ export default function AnulacionPage() {
                           </div>
 
                           <Button
+                            id={index === 0 ? "tour-boton-anular" : undefined}
                             variant="destructive"
                             size="sm"
                             onClick={() => triggerAnulacion(item)}
@@ -630,6 +689,12 @@ export default function AnulacionPage() {
 
         </div>
       </main>
+
+      <TourAnulacion
+        estudianteListo={!!estudianteSeleccionado}
+        anulacionListo={!!mensajeExito}
+        onVerDescuento={verDescuentoDemo}
+      />
 
       {/* DIALOG DE CONFIRMACION */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
