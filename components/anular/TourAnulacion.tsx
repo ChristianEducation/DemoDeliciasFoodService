@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { X, ArrowRight, ArrowLeft } from "lucide-react"
 
@@ -64,10 +64,14 @@ const PASOS_FINALES: PasoTour[] = [
   },
 ]
 
+const MARGEN_BURBUJA = 16
+
 export default function TourAnulacion({ estudianteListo, anulacionListo, onVerDescuento }: TourAnulacionProps) {
   const [activo, setActivo] = useState(true)
   const [indice, setIndice] = useState(0)
   const [rect, setRect] = useState<DOMRect | null>(null)
+  const [posicion, setPosicion] = useState<"top" | "bottom">("bottom")
+  const bubbleRef = useRef<HTMLDivElement>(null)
 
   const pasos: PasoTour[] = [
     ...PASOS_INICIALES,
@@ -116,6 +120,30 @@ export default function TourAnulacion({ estudianteListo, anulacionListo, onVerDe
     }
   }, [activo, paso])
 
+  // Decide si la burbuja va arriba o abajo según cuál lado deja visible al elemento resaltado.
+  useEffect(() => {
+    if (!activo || !rect) return
+
+    const decidirPosicion = () => {
+      const bubbleHeight = bubbleRef.current?.getBoundingClientRect().height ?? 180
+      const espacioAbajo = window.innerHeight - rect.bottom
+      const espacioArriba = rect.top
+
+      if (espacioAbajo >= bubbleHeight + MARGEN_BURBUJA) {
+        setPosicion("bottom")
+      } else if (espacioArriba >= bubbleHeight + MARGEN_BURBUJA) {
+        setPosicion("top")
+      } else {
+        // Ningún lado tiene espacio de sobra: se elige el que deje tapar menos.
+        setPosicion(espacioAbajo >= espacioArriba ? "bottom" : "top")
+      }
+    }
+
+    decidirPosicion()
+    const t = setTimeout(decidirPosicion, 350)
+    return () => clearTimeout(t)
+  }, [activo, rect])
+
   if (!activo || !paso) return null
 
   const siguiente = () => {
@@ -150,9 +178,12 @@ export default function TourAnulacion({ estudianteListo, anulacionListo, onVerDe
         />
       )}
 
-      {/* Burbuja del tour: siempre fija y centrada abajo, nunca se mueve */}
+      {/* Burbuja del tour: fija y centrada horizontalmente; solo cambia arriba/abajo para no tapar el elemento resaltado */}
       <div
-        className="fixed z-[80] bottom-4 left-1/2 -translate-x-1/2 w-[calc(100vw-2rem)] max-w-sm bg-white rounded-xl shadow-2xl border border-purple-200 p-4 space-y-3"
+        ref={bubbleRef}
+        className={`fixed z-[80] left-1/2 -translate-x-1/2 w-[calc(100vw-2rem)] max-w-sm bg-white rounded-xl shadow-2xl border border-purple-200 p-4 space-y-3 transition-[top,bottom] duration-300 ${
+          posicion === "bottom" ? "bottom-4" : "top-4"
+        }`}
       >
         <div className="flex items-start justify-between gap-2">
           <div>

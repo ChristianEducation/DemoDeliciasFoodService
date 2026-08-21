@@ -343,8 +343,33 @@ export default function AnulacionPage() {
 
     const hoyChile = obtenerFechaChileISO()
     const [y, m, d] = hoyChile.split("-").map(Number)
-    const fechaFutura = new Date(y, m - 1, d + 3)
-    const fechaFuturaStr = fechaFutura.toISOString().split("T")[0]
+
+    // Varios almuerzos futuros para que el descuento del crédito se vea aplicado
+    // sobre un total mayor a $0 (con un solo almuerzo el total quedaría en $0
+    // y eso genera dudas al mostrar la demo).
+    const menusDemo = [
+      { codigo_opcion: "1", descripcion_opcion: "Pollo al horno con puré" },
+      { codigo_opcion: "2", descripcion_opcion: "Lasaña de verduras" },
+      { codigo_opcion: "3", descripcion_opcion: "Pescado con arroz" },
+    ]
+
+    const pedidos: Record<string, any[]> = {}
+    menusDemo.forEach((menu, index) => {
+      const fechaFutura = new Date(y, m - 1, d + 3 + index)
+      const fechaFuturaStr = fechaFutura.toISOString().split("T")[0]
+      pedidos[fechaFuturaStr] = [
+        {
+          codigo_opcion: menu.codigo_opcion,
+          descripcion_opcion: menu.descripcion_opcion,
+          categoria: "Almuerzo",
+          fecha: fechaFuturaStr,
+          dia_semana: "",
+          cantidad: 1,
+          precio_unitario: 5500,
+          subtotal: 5500,
+        },
+      ]
+    })
 
     const carritoAlmuerzos = {
       destinatarios: [
@@ -352,20 +377,7 @@ export default function AnulacionPage() {
           id: estudianteSeleccionado.id,
           nombre: estudianteSeleccionado.name,
           tipo: "estudiante",
-          pedidos: {
-            [fechaFuturaStr]: [
-              {
-                codigo_opcion: "1",
-                descripcion_opcion: "Pollo al horno con puré",
-                categoria: "Almuerzo",
-                fecha: fechaFuturaStr,
-                dia_semana: "",
-                cantidad: 1,
-                precio_unitario: 5500,
-                subtotal: 5500,
-              },
-            ],
-          },
+          pedidos,
         },
       ],
     }
