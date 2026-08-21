@@ -353,10 +353,22 @@ export default function AnulacionPage() {
       { codigo_opcion: "3", descripcion_opcion: "Pescado con arroz" },
     ]
 
+    // Solo se almuerza de lunes a viernes en el casino: avanzamos día a día
+    // saltando sábados y domingos hasta juntar una fecha hábil por cada menú.
+    const siguienteFechaHabil = (fechaBase: Date) => {
+      const fecha = new Date(fechaBase)
+      while (fecha.getDay() === 0 || fecha.getDay() === 6) {
+        fecha.setDate(fecha.getDate() + 1)
+      }
+      return fecha
+    }
+
     const pedidos: Record<string, any[]> = {}
-    menusDemo.forEach((menu, index) => {
-      const fechaFutura = new Date(y, m - 1, d + 3 + index)
-      const fechaFuturaStr = fechaFutura.toISOString().split("T")[0]
+    let cursor = new Date(y, m - 1, d + 3)
+    menusDemo.forEach((menu) => {
+      cursor = siguienteFechaHabil(cursor)
+      const fechaFuturaStr = cursor.toISOString().split("T")[0]
+      cursor.setDate(cursor.getDate() + 1)
       pedidos[fechaFuturaStr] = [
         {
           codigo_opcion: menu.codigo_opcion,
