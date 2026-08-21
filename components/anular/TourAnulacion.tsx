@@ -135,21 +135,9 @@ export default function TourAnulacion({ estudianteListo, anulacionListo, onVerDe
     if (indice > 0) setIndice((i) => i - 1)
   }
 
-  const target = rect ? document.getElementById(paso.targetId) : null
-
-  // Posición de la burbuja: debajo del elemento si hay espacio, si no arriba.
-  let top = 0
-  let left = 0
-  if (rect) {
-    const espacioAbajo = window.innerHeight - rect.bottom
-    const abajo = espacioAbajo > 180
-    top = abajo ? rect.bottom + 12 : rect.top - 12
-    left = Math.min(Math.max(rect.left, 16), window.innerWidth - 336)
-  }
-
   return (
     <>
-      {/* Resalte del elemento objetivo */}
+      {/* Resalte del elemento objetivo: esto es lo único que se mueve entre pasos */}
       {rect && (
         <div
           className="fixed z-[70] rounded-lg ring-4 ring-purple-400/70 ring-offset-2 pointer-events-none transition-all duration-300"
@@ -162,13 +150,9 @@ export default function TourAnulacion({ estudianteListo, anulacionListo, onVerDe
         />
       )}
 
-      {/* Burbuja del tour */}
+      {/* Burbuja del tour: siempre fija y centrada abajo, nunca se mueve */}
       <div
-        className="fixed z-[80] w-80 bg-white rounded-xl shadow-2xl border border-purple-200 p-4 space-y-3 transition-all duration-300"
-        style={{
-          top: rect ? (top > window.innerHeight - 200 ? top - 200 : top) : window.innerHeight / 2 - 80,
-          left: rect ? left : window.innerWidth / 2 - 160,
-        }}
+        className="fixed z-[80] bottom-4 left-1/2 -translate-x-1/2 w-[calc(100vw-2rem)] max-w-sm bg-white rounded-xl shadow-2xl border border-purple-200 p-4 space-y-3"
       >
         <div className="flex items-start justify-between gap-2">
           <div>
