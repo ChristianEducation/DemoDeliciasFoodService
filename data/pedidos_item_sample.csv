@@ -1,0 +1,3 @@
+id,pedido_id,destinatario,tipo_destinatario,fecha,tipo,codigo,descripcion,categoria,cantidad,precio_unitario,subtotal,created_at,casino,nivel
+c1f39699-9c9c-4b48-b7a5-7e12c2fda271,03b7b81c-5542-4a3d-acc6-ae672a3c2222,Acevedo Gática Julieta,estudiante,2025-07-22,colacion,2.01 Snack 1,Yogurt con Granola + Jugo 200 cc,colacion,1,3100,3100,2025-07-19 01:47:46.575142+00,,PRESCHOOL
+413f832c-5723-4194-b0da-4ea96d3c6a03,03b7b81c-5542-4a3d-acc6-ae672a3c2222,Acevedo Gática Julieta,estudiante,2025-07-22,almuerzo,1,STROGONOFF DE CERDO ARROZ,almuerzo,1,5500,5500,2025-07-19 01:47:46.575142+00,,PRESCHOOL
